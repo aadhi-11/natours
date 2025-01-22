@@ -7,8 +7,6 @@ const {
   getTour,
   updateTour,
   deleteTour,
-  checKID,
-  checkBody
 } = tourController;
 
 
