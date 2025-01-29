@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
-const morgan = require('morgan')
+const morgan = require('morgan');
+const AppError = require('./utils/appError')
+const globalErrorHandler = require('./controllers/errorController')
 
 const tourRouter = require('./routes/tourRoutes')
 const userRouter = require('./routes/userRoutes')
@@ -18,12 +20,19 @@ app.use(express.static(`${__dirname}/public`));
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
+
 app.all('*',(req, res, next) => {
-    res.status(404).json({
-        staus:'fail',
-        message:`Can't find  ${req.originalUrl} on this Server!`
-    })
+    next(new AppError(`Can't find  ${req.originalUrl} on this Server!` , 404));
 })
+
+
+//Handling error
+app.use(globalErrorHandler)
+
+
+
+
+
 
 module.exports = app;
 
