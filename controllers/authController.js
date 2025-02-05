@@ -2,6 +2,8 @@ const User = require('../models/userModel');
 const catchAsycError = require('../utils/catchAsyncError');
 const jwt = require('jsonwebtoken');
 const AppError = require('../utils/appError');
+const {promisify} = require('util');
+const { json } = require('stream/consumers');
 
 const signToken = id =>{
     return jwt.sign({id:id},process.env.JWT_SECRET,{
@@ -48,11 +50,44 @@ exports.protect = catchAsycError(async (req, res, next) => {
     if(req.headers.authentication && req.headers.authentication.startsWith('Bearer')){
         token = req.headers.authentication.split(' ')[1];
     }
-    console.log(token)
+ 
     if(!token){
         return next(new AppError('You are not logged in, please login to get access',401))
     }
 
     //2.validate token
-    next()
+    console.log(token)
+    console.log(process.env.JWT_SECRET)
+    // const decoded = promisify(jwt.verify)(token,process.env.JWT_SECRET)
+    jwt.verify(token,process.env.JWT_SECRET,  (err,decode)=>{
+        if(err){
+            return next(new AppError(err.message,401))
+        }
+        User.findOne({_id:decode.id},(err,newUser)=>{
+            if(err){
+                return next(new AppError("Token not belongs to a valid user, login again",401))
+            }
+            console.log(newUser.changedPasswordAfter(decode.iat))
+            if(newUser.changedPasswordAfter(decode.iat)){
+                
+                return next(new AppError("Password has changed login again",401))
+            }
+            next()
+        })
+    })
+
+    //3.check user still exists
+    
+    // const currentUser = await User.findOne(decoded.id)
+    // console.log(currentUser)
+
+    // if(!currentUser){
+    //     return next(new AppError("Token not belongs to a valid user, login again"));
+    // }
+
+    // //4.check user has changed password
+    // console.log(decoded)
+    // console.log(`The decoded object : ${decoded.id}`)
+    // currentUser.changedPasswordAfter(decoded.iat)
+
 });
