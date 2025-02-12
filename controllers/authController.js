@@ -68,6 +68,7 @@ exports.protect = catchAsycError(async (req, res, next) => {
                 return next(new AppError("Token not belongs to a valid user, login again",401))
             }
             console.log(newUser.changedPasswordAfter(decode.iat))
+            req.user = newUser;
             if(newUser.changedPasswordAfter(decode.iat)){
                 
                 return next(new AppError("Password has changed login again",401))
@@ -91,3 +92,12 @@ exports.protect = catchAsycError(async (req, res, next) => {
     // currentUser.changedPasswordAfter(decoded.iat)
 
 });
+
+exports.restrictTo = (...roles)=>{
+    return (req, res, next) => {
+        if(!roles.includes(req.user.role)){
+            return next(new AppError("You dont have the access",403))
+        }
+    }
+    next();
+}

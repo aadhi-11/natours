@@ -10,11 +10,13 @@ const {
   deleteTour,
   aliasTopTours,
   getTourStats,
-  getMonthlyPlan
+  getMonthlyPlan,
 } = tourController;
 
 const {
-  protect
+  protect,
+  restrictTo
+
 }=authController
 
 
@@ -39,7 +41,7 @@ router
 
 router
   .route('/')
-  .get(protect,getAllTours)
+  .get(protect,restrictTo('admin','lead-guide'),getAllTours)
   .post(createTour);
 
 router
